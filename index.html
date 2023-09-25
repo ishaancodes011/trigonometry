@@ -2,6 +2,12 @@
     width="500px" height="500px"
     style="background-color: white;">
 </canvas>
+<br>
+<br>
+<canvas id='chartCanvas'
+    width="500px" height="100px"
+    style="background-color: white;">
+</canvas>
 
 <style>
     body{
@@ -9,16 +15,11 @@
         margin: 0;
         overflow: hidden;
     }
-    #showPoints{
-        position: absolute;
-        left: 210px;
-        top: 20px;
-        margin: 10px 0;
-    }
 </style>
 
 <script>
     const ctx = myCanvas.getContext('2d');
+    const chartCtx = chartCanvas.getContext('2d')
     let pointsVisibility = false;
 
     const offset = {
@@ -26,17 +27,37 @@
         y: myCanvas.height / 2
     }
 
-    const A = {x: 0, y: 0};
-    const B = {x: 90, y: 120};
-    const C = {x: B.x, y: 0};
+    const chartOffset = {
+        x: chartCanvas.width / 2,
+        y: chartCanvas.height / 2
+    }
+
+    let theta = Math.PI/4;
+    const c = 100;
+
+    const A = {
+        x: 0, 
+        y: 0};
+    const B = {
+        x: Math.cos(theta)*c, 
+        y: Math.sin(theta)*c};
+    const C = {
+        x: B.x, 
+        y: 0};
 
     ctx.translate(offset.x, offset.y);
+    chartCtx.translate(chartOffset.x, chartOffset.y);
+
+    drawCoordinateSystem(chartCtx, chartOffset);
 
     update();
 
-    myCanvas.onmousemove = (event) => {
-        B.x = event.x - offset.x;
-        B.y = event.y - offset.y;
+    myCanvas.onwheel = (event) => {
+        theta -= toRad(Math.sign(event.deltaY));
+        
+        B.x = Math.cos(theta)*c;
+        B.y = Math.sin(theta)*c;
+
 
         C.x = B.x;
         update();
@@ -54,14 +75,9 @@
     }
 
     function update() {
-        const c = distance(A, B);
-        const a = distance(C, B);
-        const b = distance(A, C);
-
-        const sin = a/c;
-        const cos = b/c;
-        const tan = a/b;
-        const theta = Math.asin(sin) ;
+        const sin = Math.sin(theta);
+        const cos = Math.cos(theta);
+        const tan = Math.tan(theta);
 
         ctx.clearRect(-offset.x, -offset.y, myCanvas.width, myCanvas.height);
         
@@ -69,28 +85,28 @@
 
         drawCoordinateSystem(ctx, offset);
 
-        drawText(
+        drawText(ctx,
             "sin = a/c = " + sin.toFixed(2).
             toString().padEnd(8, " "),
             {x:-offset.x/2, y:offset.y*0.7},
             "red"
         )
 
-        drawText(
+        drawText(ctx,
             "cos = b/c = " + cos.toFixed(2).
             toString().padEnd(8, " "),
             {x:-offset.x/2, y:offset.y*0.8},
             "blue"
         )
 
-        drawText(
+        drawText(ctx,
             "tan = a/b = " + tan.toFixed(2).
             toString().padEnd(8, " "),
             {x:-offset.x/2, y:offset.y*0.9},
             "magenta"
         )
 
-        drawText(
+        drawText(ctx,
             "θ = " + theta.toFixed(2)+ " ("+
             Math.round(toDeg(theta)).
             toString().padEnd(2, "0") + "°)",
@@ -98,35 +114,43 @@
             "black"
         )
 
-        drawLine(A, B);
-        drawText("c", average(A, B));
-        drawLine(A, C, "blue");
-        drawText("b", average(A, C), "blue");
-        drawLine(B, C, "red");
-        drawText("a", average(C, B), "red");
+        drawLine(ctx, A, B);
+        drawText(ctx, "c", average(A, B));
+        drawLine(ctx, A, C, "blue");
+        drawText(ctx, "b", average(A, C), "blue");
+        drawLine(ctx, B, C, "red");
+        drawText(ctx, "a", average(C, B), "red");
 
-        drawText("θ",A)
+        drawText(ctx, "θ",A)
 
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
-        const start = B.x>A.x?0:Math.PI;
-        const clockwise = B.y<C.y ^ B.x>A.x;
-        let end = B.y<C.y?-theta:theta;
-        if(B.x<A.x){
-            end = Math.PI - end;
-        }
-        ctx.arc(0,0, 25, start, end, !clockwise);
+        ctx.arc(0,0, c, 0, theta, theta<0);
         ctx.stroke();
 
         if (pointsVisibility) {
-            drawPoint(A);
-            drawTextPoint("A", A);
-            drawPoint(B);
-            drawTextPoint("B", B);
-            drawPoint(C);
-            drawTextPoint("C", C);
+            drawPoint(ctx, A);
+            drawTextPoint(ctx, "A", A);
+            drawPoint(ctx, B);
+            drawTextPoint(ctx, "B", B);
+            drawPoint(ctx, C);
+            drawTextPoint(ctx, "C", C);
         }
+
+        const chartScaler = chartOffset.y*0.5;
+        drawPoint(chartCtx,
+            {x: theta*chartScaler,
+             y:sin*chartScaler
+            }, 2, "red");
+        drawPoint(chartCtx,
+            {x: theta*chartScaler,
+             y:cos*chartScaler
+            }, 2, "blue");
+        drawPoint(chartCtx,
+            {x: theta*chartScaler,
+             y:tan*chartScaler
+            }, 2, "magenta");
     }
 
     function displayPointsPrompt(ctx){
@@ -142,6 +166,10 @@
         return rad*180/Math.PI;
     }
 
+    function toRad(deg){
+        return deg*Math.PI/180;
+    }
+
     function average(p1, p2) {
         return {
             x: (p1.x + p2.x) / 2,
@@ -153,7 +181,7 @@
         return Math.hypot(p1.x - p2.x, p1.y - p2.y);
     }
     
-    function drawTextPoint(text, loc, color='white'){
+    function drawTextPoint(ctx, text, loc, color='white'){
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.textAlign = "center";
@@ -162,7 +190,7 @@
         ctx.fillText(text, loc.x, loc.y);
     }
 
-    function drawText(text, loc, color='black'){
+    function drawText(ctx, text, loc, color='black'){
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.textAlign = "center";
@@ -174,14 +202,14 @@
         ctx.fillText(text, loc.x, loc.y);
     }
     
-    function drawPoint(loc, size = 25, color='black'){
+    function drawPoint(ctx, loc, size = 25, color='black'){
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.arc(loc.x, loc.y, size/2, 0, Math.PI*2);
         ctx.fill();
     }
 
-    function drawLine(p1, p2, color="black"){
+    function drawLine(ctx, p1, p2, color="black"){
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
