@@ -20,7 +20,6 @@
 <script>
     const ctx = myCanvas.getContext('2d');
     const chartCtx = chartCanvas.getContext('2d')
-    let pointsVisibility = false;
 
     const offset = {
         x: myCanvas.width / 2,
@@ -63,17 +62,6 @@
         update();
     }
 
-    myCanvas.addEventListener('click', displayPoints)
-
-    function displayPoints(event){
-        if(pointsVisibility){
-            pointsVisibility = false;
-        } else {
-            pointsVisibility = true;
-        }
-        update();
-    }
-
     function update() {
         const sin = Math.sin(theta);
         const cos = Math.cos(theta);
@@ -85,10 +73,10 @@
         }
 
         ctx.clearRect(-offset.x, -offset.y, myCanvas.width, myCanvas.height);
-        
-        displayPointsPrompt(ctx);
 
         drawCoordinateSystem(ctx, offset);
+        
+        drawText(ctx,"Scroll Up or Down to Change Theta(θ)", {x:0, y:10-offset.y});
 
         drawText(ctx,
             "sin = " + sin.toFixed(2).
@@ -136,15 +124,6 @@
         ctx.arc(0,0, c, 0, theta, theta<0);
         ctx.stroke();
 
-        if (pointsVisibility) {
-            drawPoint(ctx, A);
-            drawTextPoint(ctx, "A", A);
-            drawPoint(ctx, B);
-            drawTextPoint(ctx, "B", B);
-            drawPoint(ctx, C);
-            drawTextPoint(ctx, "C", C);
-        }
-
         const chartScaler = chartOffset.y*0.5;
         drawPoint(chartCtx,
             {x: theta*chartScaler,
@@ -158,15 +137,6 @@
             {x: theta*chartScaler,
              y:tan*chartScaler
             }, 2, "magenta");
-    }
-
-    function displayPointsPrompt(ctx){
-        ctx.beginPath();
-        ctx.fillStyle = "black";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 18px Courier";
-        ctx.fillText("Click Anywhere To Display Points", 0, 10-offset.y);
     }
 
     function toDeg(rad){
@@ -186,15 +156,6 @@
 
     function distance(p1, p2) {
         return Math.hypot(p1.x - p2.x, p1.y - p2.y);
-    }
-    
-    function drawTextPoint(ctx, text, loc, color='white'){
-        ctx.beginPath();
-        ctx.fillStyle = color;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 13px Courier";
-        ctx.fillText(text, loc.x, loc.y);
     }
 
     function drawText(ctx, text, loc, color='black'){
