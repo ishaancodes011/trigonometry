@@ -19,27 +19,61 @@
         y: myCanvas.height / 2
     }
 
-    ctx.translate(offset.x, offset.y);
-
     const A = {x: 0, y: 0};
     const B = {x: 90, y: 120};
     const C = {x: B.x, y: 0};
 
-    drawCoordinateSystem(ctx, offset);
+    ctx.translate(offset.x, offset.y);
+
+    update();
+
+    myCanvas.onmousemove = (event) => {
+        B.x = event.x - offset.x;
+        B.y = event.y - offset.y;
+
+        C.x = B.x;
+        update();
+    }
+
+    function update() {
+        const c = distance(A, B);
+        const a = distance(C, B);
+        const b = distance(A, C);
+
+        ctx.clearRect(-offset.x, -offset.y, myCanvas.width, myCanvas.height);
+        
+        drawCoordinateSystem(ctx, offset);
+
+        drawLine(A, B);
+        drawText("c", average(A, B));
+        drawLine(A, C);
+        drawText("b", average(A, C));
+        drawLine(B, C);
+        drawText("a", average(C, B));
+
+        drawText("θ",A)
+    }
+
+    function average(p1, p2) {
+        return {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2
+        }
+    }
+
+    function distance(p1, p2) {
+        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    }
     
-    drawPoint(A);
-    drawText("A",A);
-    drawPoint(B);
-    drawText("B",B);
-    drawPoint(C);
-    drawText("C",C);
-    
-    function drawText(text, loc, color='white'){
+    function drawText(text, loc, color='black'){
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px Courier";
+        ctx.font = "bold 18px Courier";
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 7;
+        ctx.strokeText(text, loc.x, loc.y);
         ctx.fillText(text, loc.x, loc.y);
     }
     
@@ -49,7 +83,16 @@
         ctx.arc(loc.x, loc.y, size/2, 0, Math.PI*2);
         ctx.fill();
     }
-    
+
+    function drawLine(p1, p2, color="black"){
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+
     function drawCoordinateSystem(ctx, offset){
         ctx.beginPath();
         ctx.moveTo(-offset.x,0);
