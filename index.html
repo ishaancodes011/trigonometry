@@ -59,6 +59,8 @@
         const b = distance(A, C);
 
         const sin = a/c;
+        const cos = b/c;
+        const tan = a/b;
         const theta = Math.asin(sin) ;
 
         ctx.clearRect(-offset.x, -offset.y, myCanvas.width, myCanvas.height);
@@ -68,25 +70,40 @@
         drawCoordinateSystem(ctx, offset);
 
         drawText(
-            "sin = a/c = " + sin.toFixed(2),
+            "sin = a/c = " + sin.toFixed(2).
+            toString().padEnd(8, " "),
             {x:-offset.x/2, y:offset.y*0.7},
-            "black"
+            "red"
+        )
+
+        drawText(
+            "cos = b/c = " + cos.toFixed(2).
+            toString().padEnd(8, " "),
+            {x:-offset.x/2, y:offset.y*0.8},
+            "blue"
+        )
+
+        drawText(
+            "tan = a/b = " + tan.toFixed(2).
+            toString().padEnd(8, " "),
+            {x:-offset.x/2, y:offset.y*0.9},
+            "magenta"
         )
 
         drawText(
             "θ = " + theta.toFixed(2)+ " ("+
             Math.round(toDeg(theta)).
-            toString().padStart(2, "0") + "°)",
+            toString().padEnd(2, "0") + "°)",
             {x:offset.x/2, y:offset.y*0.7},
             "black"
         )
 
         drawLine(A, B);
         drawText("c", average(A, B));
-        drawLine(A, C);
-        drawText("b", average(A, C));
-        drawLine(B, C);
-        drawText("a", average(C, B));
+        drawLine(A, C, "blue");
+        drawText("b", average(A, C), "blue");
+        drawLine(B, C, "red");
+        drawText("a", average(C, B), "red");
 
         drawText("θ",A)
 
@@ -99,7 +116,7 @@
         if(B.x<A.x){
             end = Math.PI - end;
         }
-        ctx.arc(0,0, 20, start, end, !clockwise);
+        ctx.arc(0,0, 25, start, end, !clockwise);
         ctx.stroke();
 
         if (pointsVisibility) {
